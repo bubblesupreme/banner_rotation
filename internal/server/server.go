@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"banner_rotation/internal/app"
-
 	"github.com/gorilla/mux"
 )
 

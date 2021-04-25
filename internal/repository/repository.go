@@ -1,13 +1,13 @@
 package repository
 
 type Banner struct {
-	Id  int    `json:"id"`
-	Url string `json:"url"`
+	ID  int    `json:"id"`
+	URL string `json:"url"`
 }
 
 type BannersRepository interface {
-	GetBanner(siteUrl string, slotId int) (Banner, error)
-	AddSite(siteUrl string, slots []int) error
-	AddBanner(bannerUrl string) error
-	RemoveBanner(bannerUrl string) error
+	GetBanner(siteURL string, slotID int) (Banner, error)
+	AddSite(siteURL string, slots []int) error
+	AddBanner(bannerURL string) error
+	RemoveBanner(bannerURL string) error
 }

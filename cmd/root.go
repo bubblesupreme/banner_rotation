@@ -1,26 +1,27 @@
 package main
 
 import (
+	"banner_rotation/internal/app"
+	"banner_rotation/internal/server"
 	"fmt"
-	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/cobra"
-	"golang.org/x/net/context"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
 
-	"banner_rotation/internal/app"
-	"banner_rotation/internal/repository/sql"
-	"banner_rotation/internal/server"
+	sqlrepository "banner_rotation/internal/repository/sql"
+
 	_ "banner_rotation/migrations"
+	"github.com/fsnotify/fsnotify"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pressly/goose"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/net/context"
 )
 
 const (
@@ -30,7 +31,6 @@ const (
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "banner_rotation",
 	Short: "A brief description of your application",
@@ -125,15 +125,16 @@ func run(_ *cobra.Command, args []string) {
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
-			log.Panic("failed to close database: ", err.Error())
+			log.Fatal("failed to close database: ", err.Error())
 		}
 	}()
 
 	if err := goose.Up(db.DB, migrationsDir); err != nil {
-		log.Fatal("failed to migrate: ", err.Error())
+		log.Error("failed to migrate: ", err.Error())
+		return
 	}
 
-	repo := sql_repository.NewSqlRepository(db.DB)
+	repo := sqlrepository.NewSQLRepository(db.DB)
 	a := app.NewBannersApp(repo)
 	s := server.NewServer(a, config.Server.Port, config.Server.Host)
 
@@ -164,7 +165,7 @@ func run(_ *cobra.Command, args []string) {
 	if err := s.Start(ctx); err != nil {
 		log.Error("failed to start http server: " + err.Error())
 		cancel()
-		os.Exit(1) //nolint:gocritic
+		return
 	}
 
 	wg.Wait()

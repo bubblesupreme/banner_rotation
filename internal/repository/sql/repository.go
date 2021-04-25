@@ -1,9 +1,9 @@
-package sql_repository
+package sqlrepository
 
 import (
-	"banner_rotation/internal/repository"
 	"database/sql"
 
+	"banner_rotation/internal/repository"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -11,14 +11,14 @@ type sqlRepository struct {
 	db *sql.DB
 }
 
-func NewSqlRepository(db *sql.DB) repository.BannersRepository {
+func NewSQLRepository(db *sql.DB) repository.BannersRepository {
 	return &sqlRepository{
 		db: db,
 	}
 }
 
-func (r *sqlRepository) GetBanner(site string, slotId int) (repository.Banner, error) {
-	siteId, err := r.getSiteId(site)
+func (r *sqlRepository) GetBanner(site string, slotID int) (repository.Banner, error) {
+	siteID, err := r.getSiteID(site)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"site url": site,
@@ -27,55 +27,64 @@ func (r *sqlRepository) GetBanner(site string, slotId int) (repository.Banner, e
 		return repository.Banner{}, err
 	}
 
-	return r.getBanner(siteId, slotId)
+	return r.getBanner(siteID, slotID)
 }
 
-func (r *sqlRepository) AddSite(siteUrl string, slots []int) error {
+func (r *sqlRepository) AddSite(siteURL string, slots []int) error {
 	return nil
 }
 
-func (r *sqlRepository) AddBanner(bannerUrl string) error {
+func (r *sqlRepository) AddBanner(bannerURL string) error {
 	return nil
 }
 
-func (r *sqlRepository) RemoveBanner(bannerUrl string) error {
+func (r *sqlRepository) RemoveBanner(bannerURL string) error {
 	return nil
 }
 
-func (r *sqlRepository) getBanner(siteId int, slotId int) (repository.Banner, error) {
+func (r *sqlRepository) getBanner(siteID int, slotID int) (repository.Banner, error) {
 	res := repository.Banner{}
 
-	rows, err := r.db.Query("SELECT banner_id FROM banners WHERE site_id = $1 AND slot_id = $2;", siteId, slotId)
+	rows, err := r.db.Query("SELECT banner_id FROM banners WHERE site_id = $1 AND slot_id = $2;", siteID, slotID)
 	if err != nil {
 		return res, err
 	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Fatal("failed to close rows: ", err.Error())
+		}
+		if err := rows.Err(); err != nil {
+			log.Fatal("failed to check rows: ", err.Error())
+		}
+	}()
 
+	// TODO: multiarmed bandit
 	for rows.Next() {
-		if err := rows.Scan(&res.Id); err != nil {
+		if err := rows.Scan(&res.ID); err != nil {
 			return res, err
 		}
-		break // return the first
+		break //nolint:staticcheck
 	}
 
-	res.Url, err = r.getBannerUrl(res.Id)
+	res.URL, err = r.getBannerURL(res.ID)
 	return res, err
 }
 
-func (r *sqlRepository) getSiteUrl(siteId int) (string, error) {
-	row := r.db.QueryRow("SELECT url FROM site_urls WHERE id = $1;", siteId)
-	if row.Err() != nil {
-		return "", row.Err()
-	}
+// func (r *sqlRepository) getSiteURL(siteID int) (string, error) {
+//	row := r.db.QueryRow("SELECT url FROM site_urls WHERE id = $1;", siteID)
+//	if row.Err() != nil {
+//		return "", row.Err()
+//	}
+//
+//	res := ""
+//	if err := row.Scan(&res); err != nil {
+//		return "", err
+//	}
+//	return res, nil
+// }
 
-	res := ""
-	if err := row.Scan(&res); err != nil {
-		return "", err
-	}
-	return res, nil
-}
-
-func (r *sqlRepository) getSiteId(siteUrl string) (int, error) {
-	row := r.db.QueryRow("SELECT id FROM site_urls WHERE url = $1;", siteUrl)
+func (r *sqlRepository) getSiteID(siteURL string) (int, error) {
+	row := r.db.QueryRow("SELECT id FROM site_urls WHERE url = $1;", siteURL)
 	if row.Err() != nil {
 		return -1, row.Err()
 	}
@@ -87,8 +96,8 @@ func (r *sqlRepository) getSiteId(siteUrl string) (int, error) {
 	return res, nil
 }
 
-func (r *sqlRepository) getBannerUrl(bannerId int) (string, error) {
-	row := r.db.QueryRow("SELECT url FROM banner_urls WHERE id = $1;", bannerId)
+func (r *sqlRepository) getBannerURL(bannerID int) (string, error) {
+	row := r.db.QueryRow("SELECT url FROM banner_urls WHERE id = $1;", bannerID)
 	if row.Err() != nil {
 		return "", row.Err()
 	}
