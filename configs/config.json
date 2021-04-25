@@ -1,0 +1,17 @@
+{
+  "logger": {
+    "level": "info",
+    "file" : "banners.log"
+  },
+  "database": {
+    "login": "postgres",
+    "password": "",
+    "port": 5432,
+    "dbname": "banners",
+    "host": "localhost"
+  },
+  "server": {
+    "port": 8088,
+    "host": "127.0.0.1"
+  }
+}
