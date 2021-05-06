@@ -1,6 +1,13 @@
 run:
   tests: true
 
+  skip-dirs:
+    - data
+    - logs
+    - configs
+
+  skip-dirs-use-default: true
+
 linters-settings:
   funlen:
     lines: 150
@@ -28,7 +35,6 @@ linters:
     - errorlint
     - exportloopref
     - funlen
-    - gci
     - gocognit
     - goconst
     - gocritic

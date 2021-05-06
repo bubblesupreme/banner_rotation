@@ -1,12 +1,12 @@
 package server
 
 import (
+	"banner_rotation/internal/app"
 	"context"
 	"net"
 	"net/http"
 	"strconv"
 
-	"banner_rotation/internal/app"
 	"github.com/gorilla/mux"
 )
 
@@ -20,9 +20,15 @@ type Server struct {
 
 func NewServer(app *app.BannersApp, port int, host string) *Server {
 	r := mux.NewRouter()
-	r.HandleFunc("/banner", app.GetBanner).Methods("POST")
-	r.HandleFunc("/add_site", app.AddSite).Methods("POST")
+	r.HandleFunc("/get_banner", app.GetBanner).Methods("POST")
+	r.HandleFunc("/new_slot", app.AddSlot).Methods("POST")
 	r.HandleFunc("/add_banner", app.AddBanner).Methods("POST")
+	r.HandleFunc("/add_relation", app.AddRelation).Methods("POST")
+	r.HandleFunc("/remove_banner", app.RemoveBanner).Methods("POST")
+	r.HandleFunc("/remove_slot", app.RemoveSlot).Methods("POST")
+	r.HandleFunc("/remove_relation", app.RemoveRelation).Methods("POST")
+	r.HandleFunc("/click", app.Click).Methods("POST")
+	r.HandleFunc("/all_banners", app.GetAllBanners).Methods("POST")
 	r.Use(jsonHeaderMiddleware, loggingMiddleware)
 	http.Handle("/", r)
 	return &Server{
