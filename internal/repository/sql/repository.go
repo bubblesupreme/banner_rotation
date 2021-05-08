@@ -1,6 +1,7 @@
 package sqlrepository
 
 import (
+	bandit "banner_rotation/internal/multiarmed_bandit"
 	"banner_rotation/internal/repository"
 	"context"
 	"database/sql"
@@ -12,11 +13,13 @@ import (
 
 type sqlRepository struct {
 	db *sql.DB
+	bandit bandit.MultiarmedBandit
 }
 
 func NewSQLRepository(db *sql.DB) repository.BannersRepository {
 	return &sqlRepository{
 		db: db,
+		bandit: bandit,
 	}
 }
 
@@ -34,16 +37,26 @@ func (r *sqlRepository) GetBanner(ctx context.Context, slotID int) (repository.B
 		}
 	}()
 
-	// TODO: multiarmed bandit
-	bannerID := 0
+	s := bandit.BannersStatistic{}
+	b := bandit.BannerStatistic{}
 	for rows.Next() {
-		if err := rows.Scan(&bannerID); err != nil {
+		if err := rows.Scan(&b.BannerID, &b.Impressions, &b.Clicks); err != nil {
 			return repository.Banner{}, err
 		}
-		break //nolint:staticcheck
+		s = append(s, b)
 	}
 
-	return r.getBannerByID(ctx, bannerID)
+	banner, err := r.bandit.GetBanner(s)
+	if err != nil {
+		return repository.Banner{}, err
+	}
+
+	res, err := r.getBannerByID(ctx, banner.BannerID)
+	if err != nil {
+		return res, err
+	}
+
+	return r.getBannerByID(ctx, banner.bannerID)
 }
 
 func (r *sqlRepository) AddSlot(ctx context.Context) (repository.Slot, error) {
@@ -245,7 +258,7 @@ func (r *sqlRepository) Click(ctx context.Context, slotID int, bannerID int) err
 	return resErr
 }
 
-func (r *sqlRepository) Show(ctx context.Context, slotID int, bannerID int) error {
+func (r *sqlRepository) show(ctx context.Context, slotID int, bannerID int) error {
 	result, resErr := r.db.ExecContext(ctx, "UPDATE relations SET impressions = impressions + 1 WHERE slot_id = $1 AND banner_id = $2", slotID, bannerID)
 
 	if resErr == nil {

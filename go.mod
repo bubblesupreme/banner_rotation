@@ -14,6 +14,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.3.0 // indirect
 	golang.org/x/net v0.0.0-20210415231046-e915ea6b2b7d
 	mvdan.cc/gofumpt v0.1.1 // indirect
 )
