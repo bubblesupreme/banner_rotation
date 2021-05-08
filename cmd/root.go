@@ -2,6 +2,7 @@ package main
 
 import (
 	"banner_rotation/internal/app"
+	bandit "banner_rotation/internal/multiarmed_bandit"
 	"banner_rotation/internal/server"
 	"fmt"
 	"io"
@@ -30,7 +31,10 @@ import (
 const (
 	driver        = "postgres"
 	migrationsDir = "migrations"
+
 	layoutTime    = "01-02-2006-15-04-05"
+
+	minEvents     = 50
 )
 
 var cfgFile string
@@ -143,7 +147,12 @@ func run(_ *cobra.Command, args []string) {
 		return
 	}
 
-	repo := sqlrepository.NewSQLRepository(db.DB)
+	bandit, err := bandit.NewThompsonBandit(minEvents)
+	if err != nil {
+		log.Error("failed to initialize multi-armed bandit: ", err.Error())
+		return
+	}
+	repo := sqlrepository.NewSQLRepository(db.DB, bandit)
 	a := app.NewBannersApp(repo)
 	s := server.NewServer(a, config.Server.Port, config.Server.Host)
 
