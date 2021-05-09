@@ -26,11 +26,11 @@ func (r *sqlRepository) GetBanner(ctx context.Context, slotID int) (repository.B
 		return repository.Banner{}, err
 	}
 	defer func() {
-		if err := rows.Close(); err != nil {
-			log.Fatal("failed to close rows: ", err.Error())
-		}
 		if err := rows.Err(); err != nil {
 			log.Fatal("failed to check rows: ", err.Error())
+		}
+		if err := rows.Close(); err != nil {
+			log.Fatal("failed to close rows: ", err.Error())
 		}
 	}()
 
@@ -43,17 +43,7 @@ func (r *sqlRepository) GetBanner(ctx context.Context, slotID int) (repository.B
 		break //nolint:staticcheck
 	}
 
-	res, err := r.getBannerByID(ctx, bannerID)
-	if err != nil {
-		return res, err
-	}
-
-	// don't return this error, only for logging
-	if err := r.show(ctx, slotID, bannerID); err != nil {
-		log.Error("failed to count the impression: ", err.Error())
-	}
-
-	return res, nil
+	return r.getBannerByID(ctx, bannerID)
 }
 
 func (r *sqlRepository) AddSlot(ctx context.Context) (repository.Slot, error) {
@@ -255,7 +245,7 @@ func (r *sqlRepository) Click(ctx context.Context, slotID int, bannerID int) err
 	return resErr
 }
 
-func (r *sqlRepository) show(ctx context.Context, slotID int, bannerID int) error {
+func (r *sqlRepository) Show(ctx context.Context, slotID int, bannerID int) error {
 	result, resErr := r.db.ExecContext(ctx, "UPDATE relations SET impressions = impressions + 1 WHERE slot_id = $1 AND banner_id = $2", slotID, bannerID)
 
 	if resErr == nil {
@@ -280,11 +270,11 @@ func (r *sqlRepository) GetAllBanners(ctx context.Context) ([]repository.Banner,
 		log.Fatal(err)
 	}
 	defer func() {
-		if err := rows.Close(); err != nil {
-			log.Fatal("failed to close rows: ", err.Error())
-		}
 		if err := rows.Err(); err != nil {
 			log.Fatal("failed to check rows: ", err.Error())
+		}
+		if err := rows.Close(); err != nil {
+			log.Fatal("failed to close rows: ", err.Error())
 		}
 	}()
 

@@ -22,4 +22,5 @@ type BannersRepository interface {
 	RemoveRelation(ctx context.Context, slotID int, bannerID int) error
 	Click(ctx context.Context, slotID int, bannerID int) error
 	GetAllBanners(ctx context.Context) ([]Banner, error)
+	Show(ctx context.Context, slotID int, bannerID int) error
 }

@@ -146,6 +146,13 @@ func run(_ *cobra.Command, args []string) {
 	a := app.NewBannersApp(repo)
 	s := server.NewServer(a, config.Server.Port, config.Server.Host)
 
+	if err := s.Start(ctx); err != nil {
+		log.Error("failed to start http server: " + err.Error())
+		cancel()
+		return
+	}
+	log.Info("server was started...")
+
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -172,13 +179,6 @@ func run(_ *cobra.Command, args []string) {
 		}
 	}()
 
-	if err := s.Start(ctx); err != nil {
-		log.Error("failed to start http server: " + err.Error())
-		cancel()
-		return
-	}
-
-	log.Info("server was started...")
 	wg.Wait()
 }
 

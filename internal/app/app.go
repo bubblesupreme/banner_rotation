@@ -35,13 +35,12 @@ func (a *BannersApp) GetBanner(w http.ResponseWriter, r *http.Request) {
 			"slot id": reqData.SlotID,
 		}).Error("failed to get banner: ", err.Error())
 
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err = json.NewEncoder(w).Encode(&banner); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -50,13 +49,12 @@ func (a *BannersApp) AddSlot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error("failed to add new slot: ", err.Error())
 
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err = json.NewEncoder(w).Encode(&slot); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -79,13 +77,12 @@ func (a *BannersApp) AddBanner(w http.ResponseWriter, r *http.Request) {
 			"description": reqData.BannerDescr,
 		}).Error("failed to add new banner: ", err.Error())
 
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err = json.NewEncoder(w).Encode(&banner); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -108,8 +105,7 @@ func (a *BannersApp) AddRelation(w http.ResponseWriter, r *http.Request) {
 			"banner id": reqData.BannerID,
 		}).Error("failed to add new relation: ", err.Error())
 
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -130,8 +126,7 @@ func (a *BannersApp) RemoveBanner(w http.ResponseWriter, r *http.Request) {
 			"banner id": reqData.BannerID,
 		}).Error("failed to remove banner: ", err.Error())
 
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -152,8 +147,7 @@ func (a *BannersApp) RemoveSlot(w http.ResponseWriter, r *http.Request) {
 			"slo id": reqData.SlotID,
 		}).Error("failed to remove banner: ", err.Error())
 
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -176,8 +170,7 @@ func (a *BannersApp) RemoveRelation(w http.ResponseWriter, r *http.Request) {
 			"banner id": reqData.BannerID,
 		}).Error("failed to remove relation: ", err.Error())
 
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -200,8 +193,30 @@ func (a *BannersApp) Click(w http.ResponseWriter, r *http.Request) {
 			"banner id": reqData.BannerID,
 		}).Error("failed to count the click: ", err.Error())
 
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (a *BannersApp) Show(w http.ResponseWriter, r *http.Request) {
+	reqData := struct {
+		SlotID   int `json:"slot"`
+		BannerID int `json:"banner"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&reqData); err != nil {
+		log.Error(parseRequestParamsErr(err))
+
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	err := a.repo.Show(r.Context(), reqData.SlotID, reqData.BannerID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"slo id":    reqData.SlotID,
+			"banner id": reqData.BannerID,
+		}).Error("failed to count the click: ", err.Error())
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -210,13 +225,12 @@ func (a *BannersApp) GetAllBanners(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error("failed to get all available banners: ", err.Error())
 
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err = json.NewEncoder(w).Encode(&banners); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
