@@ -32,7 +32,7 @@ func NormalizeFloat64(s []float64) ([]float64, error) {
 		return nil, errors.New("failed to normalize, the sum is 0")
 	}
 
-	res := make([]float64, len(s), len(s))
+	res := make([]float64, len(s))
 	for i, v := range s {
 		res[i] = v / sum
 	}
@@ -50,10 +50,10 @@ func DensityFloat64(s []float64) ([]float64, error) {
 		return nil, err
 	}
 
-	res := make([]float64, len(s), len(s))
+	res := make([]float64, len(s))
 	res[0] = norm[0]
 	for i := 1; i < len(res); i++ {
-		res[i] = res[i -1] + norm[i]
+		res[i] = res[i-1] + norm[i]
 	}
 
 	return res, nil
@@ -69,7 +69,7 @@ func ValIdxFromRatings(s []float64) (int, error) {
 		return -1, err
 	}
 
-	p := rand.Float64()
+	p := rand.Float64() //nolint:gosec
 	for i, d := range density {
 		if p <= d {
 			return i, nil

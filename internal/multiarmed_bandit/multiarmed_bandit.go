@@ -1,9 +1,9 @@
 package multiarmedbandit
 
 type BannerStatistic struct {
-	BannerID int
+	BannerID    int
 	Impressions int
-	Clicks int
+	Clicks      int
 }
 
 type BannersStatistic = []BannerStatistic

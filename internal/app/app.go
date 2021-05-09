@@ -18,9 +18,10 @@ func NewBannersApp(repo repository.BannersRepository) *BannersApp {
 	}
 }
 
-func (a *BannersApp) GetBanner(w http.ResponseWriter, r *http.Request) {
+func (a *BannersApp) GetBanner(w http.ResponseWriter, r *http.Request) { //nolint:dupl
 	reqData := struct {
-		SlotID int `json:"slot"`
+		SlotID  int `json:"slot"`
+		GroupID int `json:"group"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&reqData); err != nil {
 		log.Error(parseRequestParamsErr(err))
@@ -29,10 +30,11 @@ func (a *BannersApp) GetBanner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	banner, err := a.repo.GetBanner(r.Context(), reqData.SlotID)
+	banner, err := a.repo.GetBanner(r.Context(), reqData.SlotID, reqData.GroupID)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"slot id": reqData.SlotID,
+			"slot id":  reqData.SlotID,
+			"group id": reqData.GroupID,
 		}).Error("failed to get banner: ", err.Error())
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,7 +60,7 @@ func (a *BannersApp) AddSlot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *BannersApp) AddBanner(w http.ResponseWriter, r *http.Request) {
+func (a *BannersApp) AddBanner(w http.ResponseWriter, r *http.Request) { //nolint:dupl
 	reqData := struct {
 		BannerURL   string `json:"url"`
 		BannerDescr string `json:"description"`
@@ -144,7 +146,7 @@ func (a *BannersApp) RemoveSlot(w http.ResponseWriter, r *http.Request) {
 	err := a.repo.RemoveSlot(r.Context(), reqData.SlotID)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"slo id": reqData.SlotID,
+			"slot id": reqData.SlotID,
 		}).Error("failed to remove banner: ", err.Error())
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -178,6 +180,7 @@ func (a *BannersApp) Click(w http.ResponseWriter, r *http.Request) {
 	reqData := struct {
 		SlotID   int `json:"slot"`
 		BannerID int `json:"banner"`
+		GroupID  int `json:"group"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&reqData); err != nil {
 		log.Error(parseRequestParamsErr(err))
@@ -186,11 +189,12 @@ func (a *BannersApp) Click(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := a.repo.Click(r.Context(), reqData.SlotID, reqData.BannerID)
+	err := a.repo.Click(r.Context(), reqData.SlotID, reqData.BannerID, reqData.GroupID)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"slo id":    reqData.SlotID,
+			"slot id":   reqData.SlotID,
 			"banner id": reqData.BannerID,
+			"group id":  reqData.GroupID,
 		}).Error("failed to count the click: ", err.Error())
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -201,6 +205,7 @@ func (a *BannersApp) Show(w http.ResponseWriter, r *http.Request) {
 	reqData := struct {
 		SlotID   int `json:"slot"`
 		BannerID int `json:"banner"`
+		GroupID  int `json:"group"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&reqData); err != nil {
 		log.Error(parseRequestParamsErr(err))
@@ -209,11 +214,12 @@ func (a *BannersApp) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := a.repo.Show(r.Context(), reqData.SlotID, reqData.BannerID)
+	err := a.repo.Show(r.Context(), reqData.SlotID, reqData.BannerID, reqData.GroupID)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"slo id":    reqData.SlotID,
 			"banner id": reqData.BannerID,
+			"group id":  reqData.GroupID,
 		}).Error("failed to count the click: ", err.Error())
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -231,6 +237,70 @@ func (a *BannersApp) GetAllBanners(w http.ResponseWriter, r *http.Request) {
 
 	if err = json.NewEncoder(w).Encode(&banners); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (a *BannersApp) GetAllGroups(w http.ResponseWriter, r *http.Request) {
+	groups, err := a.repo.GetAllGroups(r.Context())
+	if err != nil {
+		log.Error("failed to get all available social groups: ", err.Error())
+
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err = json.NewEncoder(w).Encode(&groups); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func (a *BannersApp) AddGroup(w http.ResponseWriter, r *http.Request) {
+	reqData := struct {
+		GroupDescr string `json:"description"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&reqData); err != nil {
+		log.Error(parseRequestParamsErr(err))
+
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	group, err := a.repo.AddGroup(r.Context(), reqData.GroupDescr)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"description": reqData.GroupDescr,
+		}).Error("failed to add new social group: ", err.Error())
+
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err = json.NewEncoder(w).Encode(&group); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func (a *BannersApp) RemoveGroup(w http.ResponseWriter, r *http.Request) {
+	reqData := struct {
+		GroupID int `json:"group"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&reqData); err != nil {
+		log.Error(parseRequestParamsErr(err))
+
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := a.repo.RemoveGroup(r.Context(), reqData.GroupID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"group id": reqData.GroupID,
+		}).Error("failed to remove group: ", err.Error())
+
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 }
 

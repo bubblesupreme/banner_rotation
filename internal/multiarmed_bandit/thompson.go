@@ -4,12 +4,11 @@ import (
 	"banner_rotation/utils"
 )
 
-
 type thompsonBandit struct {
 	minEvents int
 }
 
-func NewThompsonBandit(minEvents int) (MultiarmedBandit, error){
+func NewThompsonBandit(minEvents int) (MultiarmedBandit, error) {
 	return &thompsonBandit{
 		minEvents: minEvents,
 	}, nil
@@ -42,15 +41,15 @@ func warmBanners(s BannersStatistic, minActions int) []int {
 }
 
 func calculateRatings(s BannersStatistic, warm []int) []float64 {
-	ratings := make([]float64, len(s), len(s))
+	ratings := make([]float64, len(s))
 	warmIdx := -1
-	if len(warm) > 0{
+	if len(warm) > 0 {
 		warmIdx = 0
 	}
 	for i, b := range s {
 		if warmIdx != -1 && warm[warmIdx] == i {
 			warmIdx++
-			ratings[i] = float64(b.Clicks)/float64(b.Impressions)
+			ratings[i] = float64(b.Clicks) / float64(b.Impressions)
 		} else { // banner is cold
 			ratings[i] = 1.
 		}

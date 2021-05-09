@@ -32,9 +32,9 @@ const (
 	driver        = "postgres"
 	migrationsDir = "migrations"
 
-	layoutTime    = "01-02-2006-15-04-05"
+	layoutTime = "01-02-2006-15-04-05"
 
-	minEvents     = 50
+	minEvents = 50
 )
 
 var cfgFile string

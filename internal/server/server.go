@@ -30,6 +30,9 @@ func NewServer(app *app.BannersApp, port int, host string) *Server {
 	r.HandleFunc("/click", app.Click).Methods("POST")
 	r.HandleFunc("/show", app.Show).Methods("POST")
 	r.HandleFunc("/all_banners", app.GetAllBanners).Methods("GET")
+	r.HandleFunc("/all_groups", app.GetAllGroups).Methods("GET")
+	r.HandleFunc("/add_group", app.AddGroup).Methods("POST")
+	r.HandleFunc("/remove_group", app.RemoveGroup).Methods("DELETE")
 	r.Use(jsonHeaderMiddleware, loggingMiddleware)
 	http.Handle("/", r)
 	return &Server{
