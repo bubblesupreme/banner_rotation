@@ -11,27 +11,31 @@ func init() {
 }
 
 func upBanners(tx *sql.Tx) error {
-	if _, err := tx.Exec(`CREATE TABLE "banner_urls" (
+	if _, err := tx.Exec(`
+CREATE TABLE "banners" (
     "id" SERIAL NOT NULL,
     "url" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
     PRIMARY KEY ("id")
 );`); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(`CREATE TABLE "site_urls" (
+	if _, err := tx.Exec(`
+CREATE TABLE "slots" (
     "id" SERIAL NOT NULL,
-    "url" TEXT NOT NULL,
     PRIMARY KEY ("id")
 );`); err != nil {
 		return err
 	}
 
-	_, err := tx.Exec(`CREATE TABLE "banners" (
+	_, err := tx.Exec(`
+CREATE TABLE "relations" (
     "id" SERIAL NOT NULL,
-    "banner_id" INTEGER NOT NULL,
-    "site_id" INTEGER NOT NULL,
     "slot_id" INTEGER NOT NULL,
+    "banner_id" INTEGER NOT NULL,
+    "impressions" INTEGER NOT NULL,
+    "clicks" INTEGER NOT NULL,
     PRIMARY KEY ("id")
 );`)
 
@@ -39,15 +43,15 @@ func upBanners(tx *sql.Tx) error {
 }
 
 func downBanners(tx *sql.Tx) error {
-	if _, err := tx.Exec(`DROP TABLE "banner_urls";`); err != nil {
+	if _, err := tx.Exec(`DROP TABLE "banners";`); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(`DROP TABLE "site_urls";`); err != nil {
+	if _, err := tx.Exec(`DROP TABLE "slots";`); err != nil {
 		return err
 	}
 
-	_, err := tx.Exec(`DROP TABLE "banners";`)
+	_, err := tx.Exec(`DROP TABLE "relations";`)
 
 	return err
 }

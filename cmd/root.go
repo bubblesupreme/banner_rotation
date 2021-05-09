@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path"
 	"sync"
 	"syscall"
 	"time"
@@ -13,6 +14,7 @@ import (
 	sqlrepository "banner_rotation/internal/repository/sql"
 
 	_ "banner_rotation/migrations"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -27,6 +29,7 @@ import (
 const (
 	driver        = "postgres"
 	migrationsDir = "migrations"
+	layoutTime    = "01-02-2006-15-04-05"
 )
 
 var cfgFile string
@@ -76,8 +79,10 @@ func initConfig() {
 	}
 
 	viper.SetConfigType("json")
-	viper.SetEnvPrefix("CALENDAR")
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.AutomaticEnv()
+	viper.BindEnv("dblogin", "POSTGRES_USER")
+	viper.BindEnv("dbname", "POSTGRES_DB")
+	viper.BindEnv("dbpassword", "POSTGRES_PASSWORD")
 
 	readConfig()
 
@@ -97,11 +102,14 @@ func readConfig() {
 }
 
 func run(_ *cobra.Command, args []string) {
-	config := NewConfig()
+	config, err := NewConfig()
+	if err != nil {
+		log.Fatal("failed to read config: ", err.Error())
+	}
 
 	logF, err := configureLogger(config)
 	if err != nil {
-		log.Fatal("failed to configure logger")
+		log.Fatal("failed to configure logger: ", err.Error())
 	}
 	defer func() {
 		if err := logF.Close(); err != nil {
@@ -138,6 +146,13 @@ func run(_ *cobra.Command, args []string) {
 	a := app.NewBannersApp(repo)
 	s := server.NewServer(a, config.Server.Port, config.Server.Host)
 
+	if err := s.Start(ctx); err != nil {
+		log.Error("failed to start http server: " + err.Error())
+		cancel()
+		return
+	}
+	log.Info("server was started...")
+
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -159,14 +174,10 @@ func run(_ *cobra.Command, args []string) {
 
 		if err := s.Stop(ctx); err != nil {
 			log.Error("failed to stop http server: " + err.Error())
+		} else {
+			log.Info("server was stopped")
 		}
 	}()
-
-	if err := s.Start(ctx); err != nil {
-		log.Error("failed to start http server: " + err.Error())
-		cancel()
-		return
-	}
 
 	wg.Wait()
 }
@@ -179,9 +190,13 @@ func configureLogger(c Config) (*os.File, error) {
 	}
 	log.SetLevel(l)
 
-	f, err := os.OpenFile(c.Logger.File, os.O_WRONLY|os.O_CREATE, 0755)
+	fileName := fmt.Sprint("banners", time.Now().Format(layoutTime), ".log")
+	f, err := os.OpenFile(path.Join(c.Logger.Path, fileName), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 755)
 	if err != nil {
-		log.WithField("file", c.Logger.File).Errorf("failed to open log file: " + err.Error())
+		log.WithFields(log.Fields{
+			"path":      c.Logger.Path,
+			"file name": fileName,
+		}).Errorf("failed to create log file: " + err.Error())
 		return nil, err
 	}
 	log.SetOutput(f)
