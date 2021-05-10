@@ -4,6 +4,7 @@ import (
 	"banner_rotation/internal/app"
 	"banner_rotation/internal/server"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path"
@@ -199,7 +200,7 @@ func configureLogger(c Config) (*os.File, error) {
 		}).Errorf("failed to create log file: " + err.Error())
 		return nil, err
 	}
-	log.SetOutput(f)
+	log.SetOutput(io.MultiWriter(f, os.Stdout))
 
 	return f, nil
 }
