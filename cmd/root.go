@@ -3,6 +3,7 @@ package main
 import (
 	"banner_rotation/internal/app"
 	"banner_rotation/internal/multiarmed_bandit/thompson"
+	rabbitmqproducer "banner_rotation/internal/producer/rabbitmq_producer"
 	"banner_rotation/internal/server"
 	"fmt"
 	"io"
@@ -153,7 +154,16 @@ func run(_ *cobra.Command, args []string) {
 		return
 	}
 	repo := sqlrepository.NewSQLRepository(db.DB, bandit)
-	a := app.NewBannersApp(repo)
+	producer, err := rabbitmqproducer.NewProducer(
+		config.Rabbit.URL,
+		config.Rabbit.ExchangeName,
+		config.Rabbit.ClickRoutingKey,
+		config.Rabbit.ShowRoutingKey)
+	if err != nil {
+		log.Error("failed to initialize RabbitMQ producer: ", err.Error())
+		return
+	}
+	a := app.NewBannersApp(repo, producer)
 	s := server.NewServer(a, config.Server.Port, config.Server.Host)
 
 	if err := s.Start(ctx); err != nil {

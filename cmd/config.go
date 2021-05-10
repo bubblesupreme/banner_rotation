@@ -11,6 +11,7 @@ type Config struct {
 	Logger   LoggerConf
 	DataBase DBMSConf
 	Server   ServerConf
+	Rabbit   RabbitConf
 }
 
 type LoggerConf struct {
@@ -29,6 +30,13 @@ type DBMSConf struct {
 type ServerConf struct {
 	Port int    `mapstructure:"port"`
 	Host string `mapstructure:"host"`
+}
+
+type RabbitConf struct {
+	URL             string `mapstructure:"url"`
+	ExchangeName    string `mapstructure:"name"`
+	ClickRoutingKey string `mapstructure:"click routing key"`
+	ShowRoutingKey  string `mapstructure:"show routing key"`
 }
 
 func NewConfig() (Config, error) {

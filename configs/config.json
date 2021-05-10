@@ -10,5 +10,11 @@
   "server": {
     "port": 8088,
     "host": "127.0.0.1"
+  },
+  "rabbit": {
+    "url": "amqp://guest:guest@localhost:5672/",
+    "name": "banners",
+    "click routing key": "click",
+    "show routing key": "show"
   }
 }

@@ -21,7 +21,7 @@ type Server struct {
 func NewServer(app *app.BannersApp, port int, host string) *Server {
 	r := mux.NewRouter()
 	r.HandleFunc("/get_banner", app.GetBanner).Methods("POST")
-	r.HandleFunc("/new_slot", app.AddSlot).Methods("POST")
+	r.HandleFunc("/add_slot", app.AddSlot).Methods("POST")
 	r.HandleFunc("/add_banner", app.AddBanner).Methods("POST")
 	r.HandleFunc("/add_relation", app.AddRelation).Methods("POST")
 	r.HandleFunc("/remove_banner", app.RemoveBanner).Methods("DELETE")
