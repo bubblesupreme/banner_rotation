@@ -1,6 +1,7 @@
-package multiarmedbandit
+package thompson
 
 import (
+	multiarmedbandit "banner_rotation/internal/multiarmed_bandit"
 	"banner_rotation/utils"
 	"math/rand"
 	"testing"
@@ -16,7 +17,7 @@ func TestThompsonAllCold(t *testing.T) {
 	bandit, err := NewThompsonBandit(minEvents)
 	assert.NoError(t, err)
 
-	s := make([]BannerStatistic, nBanners)
+	s := make([]multiarmedbandit.BannerStatistic, nBanners)
 	for i := 0; i < len(s); i++ {
 		s[i].BannerID = i
 		s[i].Impressions = rand.Intn(minEvents)
@@ -48,7 +49,7 @@ func TestThompsonAllWarm(t *testing.T) {
 	bandit, err := NewThompsonBandit(minEvents)
 	assert.NoError(t, err)
 
-	s := make([]BannerStatistic, nBanners)
+	s := make([]multiarmedbandit.BannerStatistic, nBanners)
 	for i := 0; i < len(s); i++ {
 		s[i].BannerID = i
 		s[i].Impressions = rand.Intn(minEvents) + minEvents
@@ -82,7 +83,7 @@ func TestThompsonOneCold(t *testing.T) {
 	bandit, err := NewThompsonBandit(minEvents)
 	assert.NoError(t, err)
 
-	s := make([]BannerStatistic, nBanners)
+	s := make([]multiarmedbandit.BannerStatistic, nBanners)
 	for i := 0; i < len(s); i++ {
 		s[i].BannerID = i
 		s[i].Impressions = rand.Intn(minEvents) + minEvents
@@ -108,7 +109,7 @@ func TestThompsonOneValue(t *testing.T) {
 	bandit, err := NewThompsonBandit(minEvents)
 	assert.NoError(t, err)
 
-	s := make([]BannerStatistic, nBanners)
+	s := make([]multiarmedbandit.BannerStatistic, nBanners)
 	for i := 0; i < len(s); i++ {
 		s[i].BannerID = i
 		s[i].Impressions = rand.Intn(minEvents) + minEvents

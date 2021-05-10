@@ -1,6 +1,7 @@
-package multiarmedbandit
+package thompson
 
 import (
+	multiarmedbandit "banner_rotation/internal/multiarmed_bandit"
 	"banner_rotation/utils"
 )
 
@@ -8,28 +9,28 @@ type thompsonBandit struct {
 	minEvents int
 }
 
-func NewThompsonBandit(minEvents int) (MultiarmedBandit, error) {
+func NewThompsonBandit(minEvents int) (multiarmedbandit.MultiarmedBandit, error) {
 	return &thompsonBandit{
 		minEvents: minEvents,
 	}, nil
 }
 
-func (t *thompsonBandit) GetBanner(s BannersStatistic) (BannerStatistic, error) {
+func (t *thompsonBandit) GetBanner(s multiarmedbandit.BannersStatistic) (multiarmedbandit.BannerStatistic, error) {
 	if s == nil {
-		return BannerStatistic{}, utils.ErrNoStatistic
+		return multiarmedbandit.BannerStatistic{}, utils.ErrNoStatistic
 	}
 
 	warm := warmBanners(s, t.minEvents)
 	ratings := calculateRatings(s, warm)
 	maxIdx, err := chooseRating(ratings)
 	if err != nil {
-		return BannerStatistic{}, err
+		return multiarmedbandit.BannerStatistic{}, err
 	}
 
 	return s[maxIdx], nil
 }
 
-func warmBanners(s BannersStatistic, minActions int) []int {
+func warmBanners(s multiarmedbandit.BannersStatistic, minActions int) []int {
 	warm := make([]int, 0)
 	for i, b := range s {
 		if b.Impressions >= minActions {
@@ -40,7 +41,7 @@ func warmBanners(s BannersStatistic, minActions int) []int {
 	return warm
 }
 
-func calculateRatings(s BannersStatistic, warm []int) []float64 {
+func calculateRatings(s multiarmedbandit.BannersStatistic, warm []int) []float64 {
 	ratings := make([]float64, len(s))
 	warmIdx := -1
 	if len(warm) > 0 {

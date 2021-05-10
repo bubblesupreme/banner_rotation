@@ -2,7 +2,7 @@ package main
 
 import (
 	"banner_rotation/internal/app"
-	bandit "banner_rotation/internal/multiarmed_bandit"
+	"banner_rotation/internal/multiarmed_bandit/thompson"
 	"banner_rotation/internal/server"
 	"fmt"
 	"io"
@@ -147,7 +147,7 @@ func run(_ *cobra.Command, args []string) {
 		return
 	}
 
-	bandit, err := bandit.NewThompsonBandit(minEvents)
+	bandit, err := thompson.NewThompsonBandit(minEvents)
 	if err != nil {
 		log.Error("failed to initialize multi-armed bandit: ", err.Error())
 		return
