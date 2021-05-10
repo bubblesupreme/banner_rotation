@@ -10,13 +10,13 @@ import (
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t := time.Now()
-		next.ServeHTTP(w, r)
-
 		log.WithFields(log.Fields{
 			"time:":  t.String(),
 			"method": r.Method,
 			"url":    r.URL.String(),
 		}).Info("new request was handled")
+
+		next.ServeHTTP(w, r)
 	})
 }
 

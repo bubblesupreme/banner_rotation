@@ -83,7 +83,7 @@ func (p *publisher) publish(a producer.Action, routingKey string) error {
 		return err
 	}
 
-	return p.channel.Publish(
+	err = p.channel.Publish(
 		p.exchangeName, // publish to an exchange
 		routingKey,     // routing to 0 or more queues
 		false,          // mandatory
@@ -96,6 +96,17 @@ func (p *publisher) publish(a producer.Action, routingKey string) error {
 			Priority:     0,
 		},
 	)
+
+	if err == nil {
+		log.WithFields(log.Fields{
+			"slot id":     a.SlotID,
+			"banner id":   a.BannerID,
+			"group id":    a.GroupID,
+			"routing key": routingKey,
+		}).Info("publish an action")
+	}
+
+	return err
 }
 
 func actionToByteArray(a producer.Action) ([]byte, error) {

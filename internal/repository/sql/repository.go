@@ -157,7 +157,7 @@ func (r *sqlRepository) RemoveSlot(ctx context.Context, slotID int) error {
 		case rows != 1:
 			logEntry.Errorf("expected to affect 1 row, but affected %d while removing slot", rows)
 		default:
-			logEntry.Info("banner was removed")
+			logEntry.Info("slot was removed")
 		}
 	}
 
@@ -287,7 +287,7 @@ func (r *sqlRepository) checkGroupExistence(ctx context.Context, groupID int) (b
 }
 
 func (r *sqlRepository) Click(ctx context.Context, slotID, bannerID, groupID int) error {
-	if err := r.checkSlotBannerGroupExistence(ctx, slotID, bannerID, groupID); err != nil {
+	if err := r.checkFullRelationExistence(ctx, slotID, bannerID, groupID); err != nil {
 		return err
 	}
 
@@ -309,6 +309,10 @@ func (r *sqlRepository) Click(ctx context.Context, slotID, bannerID, groupID int
 }
 
 func (r *sqlRepository) Show(ctx context.Context, slotID, bannerID, groupID int) error {
+	if err := r.checkFullRelationExistence(ctx, slotID, bannerID, groupID); err != nil {
+		return err
+	}
+
 	result, resErr := r.db.ExecContext(ctx, "UPDATE relations SET impressions = impressions + 1 WHERE slot_id = $1 AND banner_id = $2 AND group_id = $3;", slotID, bannerID, groupID)
 
 	if resErr == nil {
@@ -374,6 +378,23 @@ func (r *sqlRepository) checkRelationExistence(ctx context.Context, slotID, bann
 	}
 
 	return count > 0, err
+}
+
+func (r *sqlRepository) checkFullRelationExistence(ctx context.Context, slotID, bannerID, groupID int) error {
+	if err := r.checkSlotBannerGroupExistence(ctx, slotID, bannerID, groupID); err != nil {
+		return err
+	}
+
+	relationExist, err := r.checkRelationExistence(ctx, slotID, bannerID)
+	if err != nil {
+		return err
+	}
+
+	if !relationExist {
+		return fmt.Errorf("relation with slot id = %d and banner id = %d doesn't exist", slotID, bannerID)
+	}
+
+	return nil
 }
 
 func (r *sqlRepository) checkSlotBannerGroupExistence(ctx context.Context, slotID, bannerID, groupID int) error {
