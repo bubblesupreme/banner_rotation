@@ -31,7 +31,6 @@ import (
 
 const (
 	driver        = "postgres"
-	migrationsDir = "migrations"
 
 	layoutTime = "01-02-2006-15-04-05"
 
@@ -89,6 +88,7 @@ func initConfig() {
 	viper.BindEnv("dblogin", "POSTGRES_USER")
 	viper.BindEnv("dbname", "POSTGRES_DB")
 	viper.BindEnv("dbpassword", "POSTGRES_PASSWORD")
+	viper.BindEnv("migrations", "MIGRATIONS_DIRECTORY")
 
 	readConfig()
 
@@ -143,7 +143,7 @@ func run(_ *cobra.Command, args []string) {
 		}
 	}()
 
-	if err := goose.Up(db.DB, migrationsDir); err != nil {
+	if err := goose.Up(db.DB, config.DataBase.MigrationsDir); err != nil {
 		log.Error("failed to migrate: ", err.Error())
 		return
 	}
