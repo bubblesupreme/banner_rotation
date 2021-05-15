@@ -1,8 +1,8 @@
 package thompson
 
 import (
-	multiarmedbandit "banner_rotation/internal/multiarmed_bandit"
-	"banner_rotation/utils"
+	multiarmedbandit "github.com/bubblesupreme/banner_rotation/internal/multiarmed_bandit"
+	"github.com/bubblesupreme/banner_rotation/utils"
 )
 
 type thompsonBandit struct {

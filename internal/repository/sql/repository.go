@@ -1,12 +1,13 @@
 package sqlrepository
 
 import (
-	bandit "banner_rotation/internal/multiarmed_bandit"
-	"banner_rotation/internal/repository"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	bandit "github.com/bubblesupreme/banner_rotation/internal/multiarmed_bandit"
+	"github.com/bubblesupreme/banner_rotation/internal/repository"
 
 	log "github.com/sirupsen/logrus"
 )

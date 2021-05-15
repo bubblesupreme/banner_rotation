@@ -1,10 +1,11 @@
 package app
 
 import (
-	"banner_rotation/internal/producer"
-	"banner_rotation/internal/repository"
 	"encoding/json"
 	"net/http"
+
+	"github.com/bubblesupreme/banner_rotation/internal/producer"
+	"github.com/bubblesupreme/banner_rotation/internal/repository"
 
 	log "github.com/sirupsen/logrus"
 )

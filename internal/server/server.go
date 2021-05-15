@@ -1,11 +1,12 @@
 package server
 
 import (
-	"banner_rotation/internal/app"
 	"context"
 	"net"
 	"net/http"
 	"strconv"
+
+	"github.com/bubblesupreme/banner_rotation/internal/app"
 
 	log "github.com/sirupsen/logrus"
 

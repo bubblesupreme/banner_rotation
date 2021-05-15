@@ -1,10 +1,6 @@
 package main
 
 import (
-	"banner_rotation/internal/app"
-	"banner_rotation/internal/multiarmed_bandit/thompson"
-	rabbitmqproducer "banner_rotation/internal/producer/rabbitmq_producer"
-	"banner_rotation/internal/server"
 	"fmt"
 	"io"
 	"os"
@@ -14,11 +10,16 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bubblesupreme/banner_rotation/internal/app"
+	"github.com/bubblesupreme/banner_rotation/internal/multiarmed_bandit/thompson"
+	rabbitmqproducer "github.com/bubblesupreme/banner_rotation/internal/producer/rabbitmq_producer"
+	"github.com/bubblesupreme/banner_rotation/internal/server"
+
 	"github.com/NeowayLabs/wabbit/amqp"
 
-	sqlrepository "banner_rotation/internal/repository/sql"
+	sqlrepository "github.com/bubblesupreme/banner_rotation/internal/repository/sql"
 
-	_ "banner_rotation/migrations"
+	_ "github.com/bubblesupreme/banner_rotation/migrations"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/jmoiron/sqlx"

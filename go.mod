@@ -1,4 +1,4 @@
-module banner_rotation
+module github.com/bubblesupreme/banner_rotation
 
 go 1.16
 
@@ -15,7 +15,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
-	github.com/streadway/amqp v1.0.0
+	github.com/streadway/amqp v1.0.0 // indirect
 	github.com/stretchr/testify v1.5.1
 	github.com/tiago4orion/conjure v0.0.0-20150908101743-93cb30b9d218 // indirect
 	golang.org/x/net v0.0.0-20210415231046-e915ea6b2b7d

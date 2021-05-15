@@ -1,10 +1,11 @@
 package thompson
 
 import (
-	multiarmedbandit "banner_rotation/internal/multiarmed_bandit"
-	"banner_rotation/utils"
 	"math/rand"
 	"testing"
+
+	multiarmedbandit "github.com/bubblesupreme/banner_rotation/internal/multiarmed_bandit"
+	"github.com/bubblesupreme/banner_rotation/utils"
 
 	"github.com/stretchr/testify/assert"
 )

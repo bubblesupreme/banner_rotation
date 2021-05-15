@@ -1,7 +1,6 @@
 package rabbitmqproducer
 
 import (
-	"banner_rotation/internal/producer"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -9,6 +8,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/bubblesupreme/banner_rotation/internal/producer"
 
 	"github.com/NeowayLabs/wabbit"
 	"github.com/NeowayLabs/wabbit/amqptest"
