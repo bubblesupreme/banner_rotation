@@ -219,7 +219,7 @@ func configureLogger(c Config) (*os.File, error) {
 	log.SetLevel(l)
 
 	fileName := fmt.Sprint("banners", time.Now().Format(layoutTime), ".log")
-	f, err := os.OpenFile(path.Join(c.Logger.Path, fileName), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 755)
+	f, err := os.OpenFile(path.Join(c.Logger.Path, fileName), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0755)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"path":      c.Logger.Path,
