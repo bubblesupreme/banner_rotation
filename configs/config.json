@@ -1,7 +1,7 @@
 {
   "logger": {
     "level": "info",
-    "path" : "logs"
+    "path" : "/logs"
   },
   "database": {
     "port": 5432,
@@ -12,7 +12,7 @@
     "host": "127.0.0.1"
   },
   "rabbit": {
-    "url": "amqp://guest:guest@localhost:5672/",
+    "url": "amqp://guest:guest@rabbit:5672/",
     "name": "banners",
     "click routing key": "click",
     "show routing key": "show"

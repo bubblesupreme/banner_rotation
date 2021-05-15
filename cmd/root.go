@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/NeowayLabs/wabbit/amqp"
+
 	sqlrepository "banner_rotation/internal/repository/sql"
 
 	_ "banner_rotation/migrations"
@@ -30,7 +32,7 @@ import (
 )
 
 const (
-	driver        = "postgres"
+	driver = "postgres"
 
 	layoutTime = "01-02-2006-15-04-05"
 
@@ -101,7 +103,7 @@ func initConfig() {
 
 func readConfig() {
 	if err := viper.ReadInConfig(); err == nil {
-		log.Info("using config file: "+viper.ConfigFileUsed(), log.Fields{"settings": viper.AllSettings()})
+		log.Info("using config file: " + viper.ConfigFileUsed())
 	} else {
 		log.Fatal("failed to read config file: " + err.Error())
 	}
@@ -154,8 +156,15 @@ func run(_ *cobra.Command, args []string) {
 		return
 	}
 	repo := sqlrepository.NewSQLRepository(db.DB, bandit)
+
+	rabbitConnection, err := amqp.Dial(config.Rabbit.URL)
+	if err != nil {
+		log.Error("failed to initialize rabbit connection: ", err.Error())
+		return
+	}
+
 	producer, err := rabbitmqproducer.NewProducer(
-		config.Rabbit.URL,
+		rabbitConnection,
 		config.Rabbit.ExchangeName,
 		config.Rabbit.ClickRoutingKey,
 		config.Rabbit.ShowRoutingKey)
@@ -163,15 +172,9 @@ func run(_ *cobra.Command, args []string) {
 		log.Error("failed to initialize RabbitMQ producer: ", err.Error())
 		return
 	}
-	a := app.NewBannersApp(repo, producer)
-	s := server.NewServer(a, config.Server.Port, config.Server.Host)
 
-	if err := s.Start(ctx); err != nil {
-		log.Error("failed to start http server: " + err.Error())
-		cancel()
-		return
-	}
-	log.Info("server was started...")
+	a := app.NewBannersApp(repo, producer)
+	s := server.NewServer(a, config.Server.Port)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -194,10 +197,14 @@ func run(_ *cobra.Command, args []string) {
 
 		if err := s.Stop(ctx); err != nil {
 			log.Error("failed to stop http server: " + err.Error())
-		} else {
-			log.Info("server was stopped")
 		}
 	}()
+
+	if err := s.Start(ctx); err != nil {
+		log.Error("failed to start http server: " + err.Error())
+		cancel()
+		return
+	}
 
 	wg.Wait()
 }

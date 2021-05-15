@@ -10,13 +10,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/NeowayLabs/wabbit"
+	"github.com/NeowayLabs/wabbit/amqptest"
+	"github.com/NeowayLabs/wabbit/amqptest/server"
 	log "github.com/sirupsen/logrus"
-	"github.com/streadway/amqp"
-
 	"github.com/stretchr/testify/assert"
 )
 
-type handleFunc func(deliveries <-chan amqp.Delivery, done chan error)
+type handleFunc func(deliveries <-chan wabbit.Delivery, done chan error)
 
 func TestProducer(t *testing.T) {
 	url := "amqp://guest:guest@localhost:5672/"
@@ -39,20 +40,30 @@ func TestProducer(t *testing.T) {
 		shows[i].SlotID = rand.Intn(maxID)
 		shows[i].GroupID = rand.Intn(maxID)
 	}
+
+	m := sync.Mutex{}
 	handledClicks := make([]producer.Action, 0, nAction)
 	handledShows := make([]producer.Action, 0, nAction)
 
-	p, err := NewProducer(url, exchangeName, clickRoutingKey, showRoutingKey)
+	fakeServer := server.NewServer(url)
+	fakeServer.Start()
+
+	conn, err := amqptest.Dial(url)
+	assert.NoError(t, err)
+
+	p, err := NewProducer(conn, exchangeName, clickRoutingKey, showRoutingKey)
 	defer func() {
 		assert.NoError(t, p.Shutdown())
 	}()
 	assert.NoError(t, err)
 
-	cClick, err := createConsumer(url, exchangeName, clickQueueName, clickRoutingKey, "", func(deliveries <-chan amqp.Delivery, done chan error) {
+	cClick, err := createConsumer(url, exchangeName, clickQueueName, clickRoutingKey, "", func(deliveries <-chan wabbit.Delivery, done chan error) {
 		for d := range deliveries {
-			a, err := byteArrayToAction(d.Body)
+			a, err := byteArrayToAction(d.Body())
 			assert.NoError(t, err)
+			m.Lock()
 			handledClicks = append(handledClicks, a)
+			m.Unlock()
 			d.Ack(false)
 		}
 		log.Printf("handle: deliveries channel closed")
@@ -60,11 +71,13 @@ func TestProducer(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	cShow, err := createConsumer(url, exchangeName, showQueueName, showRoutingKey, "", func(deliveries <-chan amqp.Delivery, done chan error) {
+	cShow, err := createConsumer(url, exchangeName, showQueueName, showRoutingKey, "", func(deliveries <-chan wabbit.Delivery, done chan error) {
 		for d := range deliveries {
-			a, err := byteArrayToAction(d.Body)
+			a, err := byteArrayToAction(d.Body())
 			assert.NoError(t, err)
+			m.Lock()
 			handledShows = append(handledShows, a)
+			m.Unlock()
 			d.Ack(false)
 		}
 		log.Printf("handle: deliveries channel closed")
@@ -79,12 +92,11 @@ func TestProducer(t *testing.T) {
 		defer wg.Done()
 
 		for _, a := range clicks {
-			err = p.Click(producer.Action{
+			assert.NoError(t, p.Click(producer.Action{
 				SlotID:   a.SlotID,
 				BannerID: a.BannerID,
 				GroupID:  a.GroupID,
-			})
-			assert.NoError(t, err)
+			}))
 		}
 	}()
 
@@ -92,12 +104,11 @@ func TestProducer(t *testing.T) {
 		defer wg.Done()
 
 		for _, a := range shows {
-			err = p.Show(producer.Action{
+			assert.NoError(t, p.Show(producer.Action{
 				SlotID:   a.SlotID,
 				BannerID: a.BannerID,
 				GroupID:  a.GroupID,
-			})
-			assert.NoError(t, err)
+			}))
 		}
 	}()
 
@@ -119,6 +130,7 @@ func TestProducer(t *testing.T) {
 				finishByTime = true
 				return
 			default:
+				m.Lock()
 				if len(handledClicks) == nAction && len(handledShows) == nAction {
 					// check clicks
 					checkHandledActions(t, clicks, handledClicks)
@@ -126,6 +138,7 @@ func TestProducer(t *testing.T) {
 					checkHandledActions(t, shows, handledShows)
 					return
 				}
+				m.Unlock()
 			}
 		}
 	}()
@@ -138,8 +151,8 @@ func TestProducer(t *testing.T) {
 }
 
 type consumer struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
+	conn    *amqptest.Conn
+	channel wabbit.Channel
 	tag     string
 	done    chan error
 }
@@ -152,13 +165,17 @@ func createConsumer(amqpURI, exchangeName, queueName, routingKey, tag string, fn
 		done:    make(chan error),
 	}
 
+	fakeServer := server.NewServer(amqpURI)
+	fakeServer.Start()
+
 	var err error
-	c.conn, err = amqp.Dial(amqpURI)
+	c.conn, err = amqptest.Dial(amqpURI)
 	if err != nil {
 		return c, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}
 
 	c.channel, err = c.conn.Channel()
+
 	if err != nil {
 		return consumer{}, fmt.Errorf("failed to open a channel from connection: %w", err)
 	}
@@ -167,44 +184,44 @@ func createConsumer(amqpURI, exchangeName, queueName, routingKey, tag string, fn
 	if err := c.channel.ExchangeDeclare(
 		exchangeName, // name
 		"direct",     // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // noWait
-		nil,          // arguments
-	); err != nil {
+		wabbit.Option{
+			"durable":    true,
+			"autoDelete": false,
+			"exclusive":  false,
+			"noWait":     false,
+		}); err != nil {
 		return consumer{}, fmt.Errorf("failed to declare an exchange: %w", err)
 	}
 
 	q, err := c.channel.QueueDeclare(
-		queueName, // name
-		false,     // durable
-		false,     // delete when unused
-		true,      // exclusive
-		false,     // no-wait
-		nil,       // arguments
+		queueName, wabbit.Option{
+			"durable":          false,
+			"deleteWhenUnused": false,
+			"exclusive":        true,
+			"noWait":           false,
+		},
 	)
 	if err != nil {
 		return consumer{}, fmt.Errorf("failed to declare a queue for click action: %w", err)
 	}
 	if err = c.channel.QueueBind(
-		q.Name,       // queue name
-		routingKey,   // routing key
-		exchangeName, // exchange
-		false,
-		nil,
+		q.Name(),
+		routingKey,
+		exchangeName,
+		wabbit.Option{},
 	); err != nil {
 		return consumer{}, fmt.Errorf("failed to bind a queue for click action: %w", err)
 	}
 
 	deliveries, err := c.channel.Consume(
-		q.Name, // name
-		tag,    // consumerTag,
-		false,  // noAck
-		false,  // exclusive
-		false,  // noLocal
-		false,  // noWait
-		nil,    // arguments
+		q.Name(), // name
+		tag,      // consumerTag,
+		wabbit.Option{
+			"noAck":     false,
+			"exclusive": false,
+			"noLocal":   false,
+			"noWait":    false,
+		},
 	)
 	if err != nil {
 		return c, fmt.Errorf("gueue consume failed: %w", err)

@@ -6,27 +6,21 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/NeowayLabs/wabbit"
+
 	log "github.com/sirupsen/logrus"
-	"github.com/streadway/amqp"
 )
 
 type publisher struct {
-	connection      *amqp.Connection
-	channel         *amqp.Channel
+	connection      wabbit.Conn
+	channel         wabbit.Channel
 	clickRoutingKey string
 	showRoutingKey  string
 	exchangeName    string
 }
 
-func NewProducer(amqpURI, exchangeName, clickRoutingKey, showRoutingKey string) (producer.Producer, error) {
-	conn, err := amqp.Dial(amqpURI)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
-	}
-
-	log.WithFields(log.Fields{
-		"url": amqpURI,
-	}).Info("got connection to RabbitMQ")
+func NewProducer(conn wabbit.Conn, exchangeName, clickRoutingKey, showRoutingKey string) (producer.Producer, error) {
+	log.Info("got connection to RabbitMQ")
 
 	channel, err := conn.Channel()
 	if err != nil {
@@ -37,11 +31,7 @@ func NewProducer(amqpURI, exchangeName, clickRoutingKey, showRoutingKey string) 
 	if err := channel.ExchangeDeclare(
 		exchangeName, // name
 		"direct",     // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // noWait
-		nil,          // arguments
+		nil,
 	); err != nil {
 		return nil, fmt.Errorf("failed to declare an exchange: %w", err)
 	}
@@ -86,14 +76,10 @@ func (p *publisher) publish(a producer.Action, routingKey string) error {
 	err = p.channel.Publish(
 		p.exchangeName, // publish to an exchange
 		routingKey,     // routing to 0 or more queues
-		false,          // mandatory
-		false,          // immediate
-		amqp.Publishing{
-			Headers:      amqp.Table{},
-			ContentType:  "text/plain",
-			Body:         b,
-			DeliveryMode: amqp.Transient, // 1=non-persistent, 2=persistent
-			Priority:     0,
+		b,
+		wabbit.Option{
+			"deliveryMode": 2,
+			"contentType":  "text/plain",
 		},
 	)
 

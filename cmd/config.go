@@ -22,17 +22,16 @@ type LoggerConf struct {
 }
 
 type DBMSConf struct {
-	Login    string `mapstructure:"login"`
-	Password string `mapstructure:"password"`
-	Port     int    `mapstructure:"port"`
-	DBName   string `mapstructure:"dbname"`
-	Host     string `mapstructure:"host"`
+	Login         string `mapstructure:"login"`
+	Password      string `mapstructure:"password"`
+	Port          int    `mapstructure:"port"`
+	DBName        string `mapstructure:"dbname"`
+	Host          string `mapstructure:"host"`
 	MigrationsDir string `mapstructure:"migrations"`
 }
 
 type ServerConf struct {
-	Port int    `mapstructure:"port"`
-	Host string `mapstructure:"host"`
+	Port int `mapstructure:"port"`
 }
 
 type RabbitConf struct {
@@ -47,7 +46,7 @@ func NewConfig() (Config, error) {
 	c.DataBase.MigrationsDir = defaultEnvString
 	c.DataBase.Login = defaultEnvString
 	c.DataBase.DBName = defaultEnvString
-	c.DataBase.Password  = defaultEnvString
+	c.DataBase.Password = defaultEnvString
 	err := viper.Unmarshal(&c)
 	if err != nil {
 		log.Errorf("unable to decode into struct")
@@ -59,9 +58,9 @@ func NewConfig() (Config, error) {
 		c.DataBase.Login, ok = viper.Get("dblogin").(string)
 		if !ok {
 			return c, fmt.Errorf(
-				"database login is not set. Define environment variable 'POSTGRES_USER' " +
+				"database login is not set. Define environment variable 'POSTGRES_USER' "+
 					"or \"database\":\"login\" in the config file or check it is not equal '%s'",
-					defaultEnvString)
+				defaultEnvString)
 		}
 	}
 	if c.DataBase.DBName == defaultEnvString {
@@ -69,9 +68,9 @@ func NewConfig() (Config, error) {
 		c.DataBase.DBName, ok = viper.Get("dbname").(string)
 		if !ok {
 			return c, fmt.Errorf(
-				"database name is not set. Define environment variable 'POSTGRES_DB' " +
+				"database name is not set. Define environment variable 'POSTGRES_DB' "+
 					"or \"database\":\"dbname\" in the config file or check it is not equal '%s'",
-					defaultEnvString)
+				defaultEnvString)
 		}
 	}
 	if c.DataBase.Password == defaultEnvString {
@@ -79,9 +78,9 @@ func NewConfig() (Config, error) {
 		c.DataBase.Password, ok = viper.Get("dbpassword").(string)
 		if !ok {
 			return c, fmt.Errorf(
-				"database login is not set. Define environment variable 'POSTGRES_PASSWORD' " +
+				"database login is not set. Define environment variable 'POSTGRES_PASSWORD' "+
 					"or \"database\":\"password\" in the config file or check it is not equal '%s'",
-					defaultEnvString)
+				defaultEnvString)
 		}
 	}
 	if c.DataBase.MigrationsDir == defaultEnvString {
@@ -89,9 +88,9 @@ func NewConfig() (Config, error) {
 		c.DataBase.MigrationsDir, ok = viper.Get("migrations").(string)
 		if !ok {
 			return c, fmt.Errorf(
-				"migrations directory is not set. Define environment variable 'MIGRATIONS_DIRECTORY' " +
+				"migrations directory is not set. Define environment variable 'MIGRATIONS_DIRECTORY' "+
 					"or \"database\":\"migrations\" in the config file or check it is not equal '%s'",
-					defaultEnvString)
+				defaultEnvString)
 		}
 	}
 

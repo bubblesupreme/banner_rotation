@@ -1,0 +1,4 @@
+POSTGRES_PASSWORD=flower
+POSTGRES_DB=banners
+POSTGRES_USER=postgres
+MIGRATIONS_DIRECTORY=/app/migrations
