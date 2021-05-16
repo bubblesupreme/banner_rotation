@@ -49,8 +49,8 @@ func (r *sqlRepository) GetBanner(ctx context.Context, slotID, groupID int) (rep
 		log.WithFields(log.Fields{
 			"slot id":  slotID,
 			"group id": groupID,
-		}).Error("no one rows were returned from sql")
-		return repository.Banner{}, fmt.Errorf("no one banner relations for given parameters")
+		}).Error("row with given parameters not found")
+		return repository.Banner{}, fmt.Errorf("banner relations with given parameters not found")
 	}
 
 	banner, err := r.bandit.GetBanner(s)
@@ -192,7 +192,7 @@ func (r *sqlRepository) AddRelation(ctx context.Context, slotID int, bannerID in
 	}
 
 	if len(groups) == 0 {
-		return fmt.Errorf("no one group exists")
+		return fmt.Errorf("group with requested parameters not found")
 	}
 
 	for _, g := range groups {
@@ -222,7 +222,7 @@ func (r *sqlRepository) RemoveRelation(ctx context.Context, slotID int, bannerID
 		case err != nil:
 			log.Error("failed to check affected row while removing relation: ", err.Error())
 		case rows == 0:
-			logEntry.Warning("no relation to delete with the same slot id and banner url")
+			logEntry.Warning("relation not found")
 		default:
 			logEntry.Info("relation was removed")
 		}
@@ -343,7 +343,7 @@ func (r *sqlRepository) GetAllBanners(ctx context.Context) ([]repository.Banner,
 	for rows.Next() {
 		banner := repository.Banner{}
 		if err := rows.Scan(&banner.ID, &banner.URL, &banner.Description); err != nil {
-			log.Error("failed to scan row with banner while getting all banners")
+			log.Error(err)
 		}
 		banners = append(banners, banner)
 	}
