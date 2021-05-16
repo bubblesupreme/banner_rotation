@@ -1,7 +1,7 @@
 {
   "logger": {
     "level": "info",
-    "path" : "/logs"
+    "path" : "/tmp/banner_rotation/logs"
   },
   "database": {
     "port": 5432,

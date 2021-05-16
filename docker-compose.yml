@@ -9,7 +9,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     restart: always
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - /tmp/banner_rotation/data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
