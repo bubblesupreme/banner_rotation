@@ -221,11 +221,11 @@ func configureLogger(c Config) (*os.File, error) {
 	fileName := fmt.Sprint("banners", time.Now().Format(layoutTime), ".log")
 	if err := os.MkdirAll(c.Logger.Path, os.ModePerm); err != nil {
 		log.WithFields(log.Fields{
-			"path":      c.Logger.Path,
+			"path": c.Logger.Path,
 		}).Errorf("failed to create log directory")
 		return nil, err
 	}
-	f, err := os.OpenFile(path.Join(c.Logger.Path, fileName), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0755)
+	f, err := os.OpenFile(path.Join(c.Logger.Path, fileName), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o755)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"path":      c.Logger.Path,

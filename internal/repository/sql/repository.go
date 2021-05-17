@@ -416,7 +416,7 @@ func (r *sqlRepository) checkSlotBannerGroupExistence(ctx context.Context, slotI
 
 func (r *sqlRepository) AddGroup(ctx context.Context, description string) (repository.Group, error) {
 	group := repository.Group{}
-	err := r.db.QueryRowContext(ctx, "SELECT id, description FROM banners WHERE description = $1;", description).Scan(&group.ID, &group.Description)
+	err := r.db.QueryRowContext(ctx, "SELECT id, description FROM groups WHERE description = $1;", description).Scan(&group.ID, &group.Description)
 	if errors.Is(err, sql.ErrNoRows) {
 		group.Description = description
 
